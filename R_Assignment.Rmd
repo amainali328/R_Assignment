@@ -1,5 +1,5 @@
 ---
-title: "Assignment"
+title: "R_Assignment-Ashmita"
 output: html_document
 date: "2024-03-06"
 ---
@@ -11,8 +11,6 @@ library(tidyverse)
 library(dplyr)
 
 ```
-
-
 ```{r}
 
 #load text files "fang_et_al_genotypes.txt" and "snp_position.txt" as dataframe; pull from GitHub
@@ -27,7 +25,7 @@ Part I: Data Inspection
 1 fang_et_at.txt
 
 ```{r}
-#Analyze the structure and dimension of file
+#Analyze the structure and dimension of the file
 
 str(fang_et_al)
 #Dimensions: 2782x986 with only ‘character’ as a variable and missing data indicated by ‘?/?’
@@ -38,10 +36,10 @@ View(fang_et_al)
 #The data frame is displayed in a different tab
 
 head(fang_et_al)
-#Diplays first 6 observations of data set
+#Diplays the first 6 observations of the data set
 
 tail(fang_et_al)
-#Displays last 6 observations of data set
+#Displays the last 6 observations of the data set
 
 names(fang_et_al)
 #Return column headers
@@ -59,7 +57,7 @@ print(file_size)
 
 2. snp_position.txt
 ```{r}
-#Analyze the structure and dimension of file
+#Analyze the structure and dimension of the file
 
 str(snp_position)
 #Dimensions: 983x15 with ‘character’ and 'double' as a variable and missing data indicated by ‘?/?’
@@ -70,10 +68,10 @@ View(snp_position)
 #The data frame is displayed in a different tab
 
 head(snp_position)
-#Obtain first 6 observations of data set
+#Obtain the first 6 observations of the data set
 
 tail(snp_position)
-#Obtain last 6 observations of data set
+#Obtain the last 6 observations of the data set
 
 names(snp_position)
 #Return column headers
@@ -115,7 +113,7 @@ teosinte_transposed <- teosinte_transposed[-1,]
 ```
 
 ```{r}
-#Remove extraenous information from snp_position, which includes columns 2 and 5-15, keeping only "SNP_ID," "Chromosome" and "Position"
+#Remove extraneous information from snp_position, which includes columns 2 and 5-15, keeping only "SNP_ID," "Chromosome" and "Position"
 snp_position <- snp_position[c(1,3,4)]
 ```
 
@@ -127,7 +125,7 @@ teosinte_snp <-  merge(snp_position,teosinte_transposed,by.x = "SNP_ID",by.y = "
 ```
 
 ```{r}
-# Create directory for maize data
+# Create a directory for maize data
 dir.create("maize", recursive = TRUE, showWarnings = FALSE)
 
 # Loop over each chromosome
@@ -195,9 +193,6 @@ Part III: Data Visualization
 
 
 ```{r}
-library(dplyr)
-library(ggplot2)
-
 # Calculate the number of SNPs per chromosome for maize and teosinte
 maize_snps_per_chr <- maize_snp %>%
   group_by(Chromosome) %>%
@@ -207,7 +202,7 @@ teosinte_snps_per_chr <- teosinte_snp %>%
   group_by(Chromosome) %>%
   summarize(n = n())
 
-# Combine the dataframes for maize and teosinte, adding a Group column
+# Combine the data frames for maize and teosinte, adding a Group column
 snps_per_chr <- bind_rows(
   mutate(maize_snps_per_chr, Group = "Maize"),
   mutate(teosinte_snps_per_chr, Group = "Teosinte")
