@@ -202,7 +202,7 @@ teosinte_snps_per_chr <- teosinte_snp %>%
   group_by(Chromosome) %>%
   summarize(n = n())
 
-# Combine the dataframes for maize and teosinte, adding a Group column
+# Combine the data frames for maize and teosinte, adding a Group column
 snps_per_chr <- bind_rows(
   mutate(maize_snps_per_chr, Group = "Maize"),
   mutate(teosinte_snps_per_chr, Group = "Teosinte")
@@ -216,13 +216,15 @@ ggplot(snps_per_chr, aes(x = factor(Chromosome), y = n, fill = Group)) +
   scale_fill_manual(values = c("Maize" = "blue", "Teosinte" = "green")) +
   geom_text(aes(label = n), vjust = -1, position = position_dodge(width = 0.9)) + # Add text labels
   theme_minimal() +
-  theme(panel.background = element_rect(fill = "white")) # Set plot background to white
+  theme(panel.background = element_rect(fill = "white"),
+        axis.text.x = element_text(size = 10, angle = 45, hjust = 1),  # Increase font size and angle x-axis labels
+        axis.text.y = element_text(size = 10))  # Increase font size of y-axis labels
 
 # Save the plot as an image file
 ggsave('./Visualization/SNPs_number_comparison.png')
 
 #Chromosome 1 has the most SNPs, whereas chromosome 10 has the least amount of SNPs for both maize and teosinte
-#From the plots, there does not seem to be a difference between maize and teosinte in terms of amount of SNP positions found in these two genotypes
+#From the plots, there does not seem to be a difference between maize and teosinte in terms of the amount of SNP positions found in these two genotypes
 
 ```
 
