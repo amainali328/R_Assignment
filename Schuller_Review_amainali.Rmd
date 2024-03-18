@@ -1,0 +1,38 @@
+---
+title: "Comments"
+author: "Colin Schuller"
+date: "2024-03-18"
+output: html_document
+---
+
+Peer review March 18th, 2024 by Colin Schuller
+
+
+# Overall data flow: 
+I was getting an error on line 117, but it did not effect any downstream commands.
+This is what I used in my analysis. Which is exactly what you used, so the only other difference I can see is how we imported the data to our Environment.
+snp_position_cut <- snp_position[,c(1,3,4)]
+
+# Importing the data:
+If you are curious, try this instead. I adjusted it to work for your code.
+
+fang_et_al <- read.delim("https://github.com/EEOB-BioData/BCB546_Spring2024/blob/main/assignments/UNIX_Assignment/fang_et_al_genotypes.txt?raw=true", header = TRUE, sep = "\t")
+
+snp_position <- read.delim("https://github.com/EEOB-BioData/BCB546_Spring2024/blob/main/assignments/UNIX_Assignment/snp_position.txt?raw=true", header = TRUE, sep = "\t")
+
+
+
+The loops for seperating the Chromosome's worked great, no issues there.
+
+# Data Visualization:
+I personally don't like seeing ggsave() because I don't know exactly what is trying to be saved to my machine. However, by just running
+ggplot() on your files they looked really good, especially your Distribution of SNPs across Chromosome section.
+
+Here's and example of what I mean if you are curious. This is from line 239.
+ggplot(filtered_snp_position, aes(x = as.numeric(as.character(Position)), fill = Chromosome)) + 
+  geom_density() + 
+  facet_wrap(~ Chromosome, nrow = 10, ncol = 2) + 
+  theme_bw() + 
+  labs(x = "Position", y = "Density")
+
+All in all, good work!
