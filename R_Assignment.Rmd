@@ -243,14 +243,14 @@ snp_dist_plot <- ggplot(filtered_snp_position, aes(x = as.numeric(as.character(P
   labs(x = "Position", y = "Density")
 
 #Plotting the distribution of SNPs across the chromosome for maize
-maize_dist_plot <- ggplot(filtered_maize_snp, aes(x = as.numeric(as.character(Position)), fill = Chromosome)) + 
+ggplot(filtered_maize_snp, aes(x = as.numeric(as.character(Position)), fill = Chromosome)) + 
   geom_density() + 
   facet_wrap(~ Chromosome, nrow = 5, ncol = 2) + 
   theme_bw() + 
   labs(title = "Distribution of SNPs across the Chromosome", x = "Position", y = "Density")
 
 #Plotting the distribution of SNPs across the chromosome for teosinte
-teosinte_dist_plot <- ggplot(filtered_teosinte_snp, aes(x = as.numeric(as.character(Position)), fill = Chromosome)) + 
+ggplot(filtered_teosinte_snp, aes(x = as.numeric(as.character(Position)), fill = Chromosome)) + 
   geom_density() + 
   facet_wrap(~ Chromosome, nrow = 5, ncol = 2) + 
   theme_bw() + 
@@ -286,15 +286,10 @@ Samples_Proportion <- ggplot(tidy_fang_genotypes, aes(x = Sample_ID, fill = geno
                labs(x = "Sample_ID", y = "Proportion of genotype")
 
 # Plot proportions of sequences for each Group
-Groups_Proportion <- ggplot(tidy_fang_genotypes, aes(x = Group , fill = genotype_varieties)) +
+ggplot(tidy_fang_genotypes, aes(x = Group , fill = genotype_varieties)) +
               geom_bar(position = "fill") + 
               theme(axis.text.x = element_text(angle = 90)) + 
               labs(y = "Proportion of genotype")
-
-# Save plots as PNG files
-ggsave("./Visualization/Sample_Proportion.png", Samples_Proportion)
-ggsave("./Visualization/Group_Proportion.png", Groups_Proportion)
-
 
 ```
 #Own Visualization
@@ -317,13 +312,11 @@ homozygous_genotypes <- genotype_counts %>%
   filter(Genotype %in% c("A/A", "T/T", "C/C", "G/G"))
 
 # Scatter plot for missing genotypes with customized y-axis limits
-homozygous_dst <- ggplot(homozygous_genotypes, aes(x = Position, y = count, color=Genotype)) +
+ggplot(homozygous_genotypes, aes(x = Position, y = count, color=Genotype)) +
   geom_point() + 
   scale_y_continuous(limits = c(0, 5000)) +
   labs(title = "Distribution of Homozygous SNP Genotype at Different Positions", x = "Position", y = "Number of Homozygous SNPs")
 
-# Save plots as PNG files
-ggsave("./Visualization/homozygous_dst.png", homozygous_dst)
 ```
 
 
