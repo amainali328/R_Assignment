@@ -1,0 +1,276 @@
+---
+title: "R_assignment"
+author: "Tae-Chun Park"
+date: "2024-03-07"
+output: html_document
+---
+
+### Read data file
+#Comment1: I guess you can directly save the data frame instead of saving the urls separately as:
+
+fang_et_al_genotypes <- read_tsv("https://github.com/EEOB-BioData/BCB546_Spring2024/raw/main/assignments/UNIX_Assignment/fang_et_al_genotypes.txt")
+```{r}
+url1 <- "https://raw.githubusercontent.com/Taechun/R_assignment/master/fang_et_al_genotypes.txt"
+fang_et_al_genotypes <- read.table(url1, header = TRUE)
+url2 <- "https://raw.githubusercontent.com/Taechun/R_assignment/master/snp_position.txt"
+snp_position <- read.table(url2, header = TRUE, fill = TRUE)
+```
+
+## Part 1
+#### Inspect structure and dimention of each file
+Comment2: Very nice inspection of files except I found issue with viewing the filesize which indicates 'NA' message. You can do it in this way too:
+file_size <- object.size(fang_et_al_genotypes)
+print(file_size)
+```{r}
+str(fang_et_al_genotypes)
+head(fang_et_al_genotypes)
+dim(fang_et_al_genotypes)
+str(snp_position)
+head(snp_position)
+dim(snp_position)
+summary(snp_position)
+file.info("fang_et_al_genotypes.txt")$size
+file.info("snp_position.txt")$size
+
+```
+With the commands above, 'fang_el_al_genotypes' has 2782 observations, and 986 variables with commends of str and dim and 'snp_position' has 1017 observations, and 15 variations. and the file size of fang_el_al is 11051939 and 82763 for snp_position. And Both files are included characters in each column. 
+
+### Join the files
+
+As our assignment instructor, I wanted to extract "SNP_ID", "Chromosome" and "Position" from SNP_position file
+```{r}
+snp_data <- snp_position[,c(1,3,4)]
+```
+
+After that, I wanted to extract two groups (maize and teosinte) from fang_et_al_genotypes.
+```{r}
+maize <- fang_et_al_genotypes[fang_et_al_genotypes$Group %in% c("ZMMIL", "ZMMLR", "ZMMMR"),]
+rownames(maize) <- NULL
+teosinte <- fang_et_al_genotypes[fang_et_al_genotypes$Group %in% c("ZMPBA", "ZMPIL", "ZMPJA"),]
+rownames(teosinte) <- NULL
+```
+
+Then, I don't need the first three columns of each file.
+```{r}
+maize_cut <- maize[,c(4:ncol(maize))]
+teosinte_cut <- teosinte[,c(4:ncol(teosinte))]
+```
+
+Now, I need to transpose those files. To do that, I need to change those files to data frame.
+```{r}
+trans_maize <- t(maize_cut)
+trans_teosinte <- t(teosinte_cut)
+```
+
+Last step, I need to combine those two files
+```{r}
+trans_maize <- as.data.frame(trans_maize)
+trans_maize <- data.frame("SNP_ID"=rownames(trans_maize), trans_maize)
+trans_maize$SNP_ID <- row.names(trans_maize)
+merged_maize <- merge(snp_data, trans_maize, by = "SNP_ID")
+trans_teosinte <- as.data.frame(trans_teosinte)
+trans_teosinte <- data.frame("SNP_ID"=rownames(trans_teosinte), trans_teosinte)
+trans_teosinte$SNP_ID <- row.names(trans_teosinte)
+merged_teosinte <- merge(snp_data, trans_teosinte, by = "SNP_ID")
+```
+
+Now I am ready to do the assignment.
+
+-10 files (1 for each chromosome) with SNPs ordered based on increasing position values and with missing data encoded by this symbol: ?
+
+Comment3: I wonder why are you creating a file for missing values, which we don't need in this assignment particularly. 
+```{r}
+chr_1_data <- merged_maize[merged_maize$Chromosome == 1, ]
+chr_1_sorted <- chr_1_data[order(as.numeric(chr_1_data$Position)), ]
+missing_rows <- subset(chr_1_sorted, apply(chr_1_sorted[, 4:49], 1, function(x) any(x == "?/?")))
+write.table(missing_rows, file = "missing_rows.txt", sep = "\t", quote = FALSE, row.names = TRUE)
+```
+
+#It takes too long time to repeat chr1 to chr10. So, using a loop to do the operation for chr1 to 10.
+
+#Comment3: When I ran your code, it gave me error as
+#Error in file(file, ifelse(append, "a", "w")) : cannot open the connection 
+Later I found out there is some discrepancy with the file names. May be you submitted the wrong mark down file in rush. Please check it. Here too you are saving files for the missing data which is not needed, which is giving errors with appending.
+I have corrected the code for you. Also, instead of saving the files directly, I have created a directory named "maize" where all of your maize data will be stored, which helps in easy documentation. 
+I have also removed the command -> missing_rows <- subset(chr_1_sorted, apply(chr_1_sorted[, 4:49], 1, function(x) any(x == "?/?"))) which is not mandatory here as well. Please replicate the same for teosinte too.
+```{r}
+# Create a directory for maize data
+dir.create("maize", recursive = TRUE, showWarnings = FALSE)
+for (chromosome in 1:10) {
+  chr_data <- merged_maize[merged_maize$Chromosome == chromosome, ]
+  maize_chr_increasing <- chr_data[order(as.numeric(gsub("[^0-9]", "", chr_data$Position))), ]
+  maize_increasing <- paste0("maize/maize_chr_increasing", chromosome, ".txt")
+  write.table(chr_sorted, file = maize_increasing, sep = "\t", quote = FALSE, row.names = TRUE)
+}
+
+```
+
+#Comment4: The code ran but all the files were empty. Your current files in github are empty too. Please check them. The same discrepency error with file and dataframe names here. 
+I have removed -> missing_rows <- subset(chr_1_sorted, apply(chr_1_sorted[, 4:49], 1, function(x) any(x == "?/?"))) which is not needed.
+
+I have written a code to replace the missing values with "-". 
+Again, the outputs are being save in the same maize folder.
+
+#-10 files (1 for each chromosome) with SNPs ordered based on decreasing position values and with missing data encoded by this symbol: -
+```{r}
+for (chromosome in 1:10) {
+  chr_data <- merged_maize[merged_maize$Chromosome == chromosome, ]
+  maize_chr_decreasing <- chr_data[order(-as.numeric(gsub("[^0-9]", "", chr_data$Position))), ]
+  
+  # Replace missing values "?/?" with "-/-"
+  maize_chr_decreasing[maize_chr_decreasing == "?/?"] <- "-/-"
+
+  maize_decreasing <- paste0("maize/maize_chr_decreasing", chromosome, ".txt")
+  write.table(maize_chr_decreasing, file = maize_decreasing, sep = "\t", quote = FALSE, row.names = TRUE)
+}
+
+```
+
+
+-10 files (1 for each chromosome) with SNPs ordered based on increasing position values and with missing data encoded by this symbol: ?
+```{r}
+for (chromosome in 1:10) {
+  chr_data <- merged_teosinte[merged_teosinte$Chromosome == chromosome, ]
+  chr_sorted <- chr_data[order(as.numeric(gsub("[^0-9]", "", chr_data$Position))), ]
+  missing_rows <- subset(chr_sorted, apply(chr_sorted[, 4:49], 1, function(x) any(x == "?/?")))
+   filename <- paste0("teosinte_?_rows_chr", chromosome, ".txt")
+  write.table(missing_rows, file = filename, sep = "\t", quote = FALSE, row.names = TRUE)
+}
+```
+
+-10 files (1 for each chromosome) with SNPs ordered based on decreasing position values and with missing data encoded by this symbol: -
+```{r}
+for (chromosome in 1:10) {
+  chr_data <- merged_teosinte[merged_teosinte$Chromosome == chromosome, ]
+  chr_sorted <- chr_data[order(-as.numeric(gsub("[^0-9]", "", chr_data$Position))), ]
+  missing_rows <- subset(chr_sorted, apply(chr_sorted[, 4:49], 1, function(x) any(x == "-")))
+   filename <- paste0("teosinte_-_rows_chr", chromosome, ".txt")
+  write.table(missing_rows, file = filename, sep = "\t", quote = FALSE, row.names = TRUE)
+}
+```
+
+## Part 2
+
+comment5: Loved the graph but I guess you missed the visualization for the distribution of SNPs across the chromosome. Hint: you can draw either a density plot with density on y-axis and position on x-axis, filling the chromosome values.
+#### SNPs per chromosome - maize
+```{r}
+library(ggplot2)
+maize_counts <- table(merged_maize$Chromosome)
+teosinte_counts <- table(merged_teosinte$Chromosome)
+df <- data.frame(
+  Chromosome = as.numeric(names(maize_counts)),
+  Maize = as.numeric(maize_counts),
+  Teosinte = as.numeric(teosinte_counts)
+)
+df_long <- tidyr::pivot_longer(df, cols = c(Maize, Teosinte), 
+                               names_to = "Species", values_to = "Count")
+ggplot(df_long, aes(x = factor(Chromosome), y = Count, fill = Species)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Chromosome", y = "Number of SNPs", fill = "Species") +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
+The distribution of SNPs showed the highest tendency on chr1 and the lowest on chr10. However, chr5 exhibited a distribution similar to chr2, and chr7 showed a distribution similar to chr4. Additionally, the distribution of SNPs was similar across each chromosome in the two species.
+
+
+#### Missing data and amount of heterozygosity
+
+Comment6: You have seamlessly done the plot harnessing pivoting and counting heterozygosity,homozygosity and missing values. But, you have only done it for maize. I would suggest you to do it for the entire fang_et_al_genotypes values which take count of the entire groups and samples.  I have written a code for you for the reference.
+
+```{r}
+library(tidyverse)
+cmaize <- maize %>% select(-JG_OTU) %>% pivot_longer(-Sample_ID:-Group)
+c_cmaize <- cmaize %>% 
+  mutate(zygous = ifelse(value %in% c("A/A", "T/T", "G/G", "C/C"), "Homozygous", 
+                         ifelse(value == "?/?", "Missing", "Heterozygous")))
+```
+
+Count the each value
+```{r}
+count_heterozygous <- sum(c_cmaize$zygous == "Heterozygous")
+print(count_heterozygous)
+count_homozygous <- sum(c_cmaize$zygous == "Homozygous")
+print(count_homozygous)
+count_missing <- sum(c_cmaize$zygous == "Missing")
+print(count_missing)
+```
+
+Visualization by each sample
+```{r}
+count_data <- c_cmaize %>%
+  group_by(Sample_ID, zygous) %>%
+  summarise(count = n())
+ggplot(count_data, aes(x = Sample_ID, y = count, fill = zygous)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Number of zygosity by sample", x = "Sample_ID", y = "Count") +
+  scale_fill_manual(values = c("Heterozygous" = "blue", "Homozygous" = "red", "Missing" = "green")) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Visualization by each group
+```{r}
+count_data_group <- c_cmaize %>%
+  group_by(Group, zygous) %>%
+  summarise(count = n())
+ggplot(count_data_group, aes(x = Group, y = count, fill = zygous)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Number of zygosity by group", x = "Group", y = "Count") +
+  scale_fill_manual(values = c("Heterozygous" = "blue", "Homozygous" = "red", "Missing" = "green")) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+# Select relevant columns and pivot to long format
+tidy_fang_genotypes <- fang_et_al_genotypes %>%
+  select(-JG_OTU) %>%
+  pivot_longer(cols = -c(Sample_ID, Group), names_to = "SNP_ID", values_to = "Genotype")
+
+# Categorize sequences into Homozygous, Heterozygous, or Missing
+tidy_fang_genotypes <- tidy_fang_genotypes %>%
+  mutate(genotype_varieties = case_when(
+    Genotype %in% c("A/A", "T/T", "C/C", "G/G") ~ "Homozygous",
+    Genotype == "?/?" ~ "Missing",
+    TRUE ~ "Heterozygous"
+  ))
+#Counting each categories of genotype
+count_data_group <- tidy_fang_genotypes %>%
+  group_by(Group, genotype_varieties) %>%
+  summarise(count = n())
+
+# Plot proportions of sequences for each Group
+ggplot(count_data_group, aes(x = Group, y = count, fill = genotype_varieties)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Number of zygosity by group", x = "Group", y = "Count") +
+  scale_fill_manual(values = c("Heterozygous" = "blue", "Homozygous" = "red", "Missing" = "green")) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+#Comment7: The graphs seems fine but I guess the intrepretation is misleading. Please see the two codes below. The second one is the one that you have written earlier. Now let's compare what's the difference. The differnce is only in the 'fill', right? Please open the two dataframes and compare. In the first one, you are filling with SNP values like "?/?, A/A, A/C, etc. In the second one, you are filling with zygous values like homo, hetero and missing. You can level A/A, A/C etc likewise you have done for zygous values in the second code.  You can edit in this part 'scale_fill_manual(values = c("Heterozygous" = "blue", "Homozygous" = "red", "Missing" = "green"))'
+```{r}
+### Your own visualization
+
+#Make a figure to see the value distribution by group
+
+count_zygous_geno <- cmaize %>%
+  group_by(Group, value) %>%
+  summarise(count = n(), .groups = "drop")
+ggplot(count_zygous_geno, aes(x = Group, y = count, fill = value)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Value distribution by group", x = "Group", y = "Count") +
+  scale_fill_manual(values = c("Heterozygous" = "blue", "Homozygous" = "red", "Missing" = "green")) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+count_data_group <- c_cmaize %>%
+  group_by(Group, zygous) %>%
+  summarise(count = n())
+ggplot(count_data_group, aes(x = Group, y = count, fill = zygous)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Number of zygosity by group", x = "Group", y = "Count") +
+  scale_fill_manual(values = c("Heterozygous" = "blue", "Homozygous" = "red", "Missing" = "green")) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
